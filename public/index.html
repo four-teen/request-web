@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#284b35">
+  <meta name="description" content="reQuest — Records Request Management System for the Student Records and Admission Office.">
+  <title>reQuest | Sign in</title>
+  <link href="assets/request-logo.png" rel="icon" type="image/png">
+  <link href="assets/request-logo.png" rel="apple-touch-icon">
+  <link href="assets/login.css" rel="stylesheet">
+  <script src="assets/enhance.js"></script>
+  <script src="assets/login.js" defer></script>
+</head>
+<body>
+  <main class="request-entry" aria-label="reQuest records office portal">
+    <div class="gateway" id="gateway">
+      <div class="identity">
+        <h1 aria-label="reQuest"><span class="request-wordmark" aria-hidden="true">reQu<span class="request-accent">e</span>st</span></h1>
+        <p class="identity-description">Records Request Management System</p>
+        <p class="identity-tagline">every request. every record. within reach.</p>
+      </div>
+
+      <div class="login-stage">
+        <div class="seal-stage">
+          <div class="seal-aura" aria-hidden="true"></div>
+          <button class="seal-button" id="sealButton" type="button"
+            aria-label="Open sign-in form"
+            aria-expanded="false" aria-controls="request-access">
+            <img class="office-seal" src="assets/request-logo.png"
+              alt="Sultan Kudarat State University — Student Records and Admission Office"
+              width="216" height="216">
+          </button>
+        </div>
+
+        <p class="entry-hint" id="sealHint">select the seal to sign in</p>
+        <div class="access-stage" id="request-access">
+          <noscript><p class="access-message">Please enable JavaScript to sign in to reQuest.</p></noscript>
+          <form id="loginForm" class="access-form" action="/api/auth/login.php" method="POST" autocomplete="off" tabindex="-1" aria-label="Sign in to your workspace" inert>
+            <p class="access-heading">Sign in to your workspace</p>
+            <p class="access-message is-error" id="loginError" role="alert" hidden></p>
+
+            <label class="field-label" for="username">Username</label>
+            <div class="credential-field">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>
+              <input id="username" name="username" type="text" placeholder="Enter your username"
+                autocomplete="off" autocapitalize="none" spellcheck="false" required>
+            </div>
+
+            <label class="field-label" for="password">Password</label>
+            <div class="credential-field">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg>
+              <input id="password" name="password" type="password" placeholder="Enter your password"
+                autocomplete="off" required>
+              <button class="visibility-button" type="button" id="togglePassword" aria-label="Show password" aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="m3 3 18 18"/></svg>
+              </button>
+            </div>
+
+            <button id="loginButton" class="sign-in-button" type="submit">
+              <span>Sign in</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+            <div class="access-actions">
+              <span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Authorized staff access</span>
+              <button class="quiet-button" id="cancelLogin" type="button">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <footer class="office-footer">
+        <span>Student Records and Admission Office</span>
+        <span>Sultan Kudarat State University</span>
+      </footer>
+    </div>
+  </main>
+</body>
+</html>

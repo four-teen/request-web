@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+.vercel/
+*.log
+*.pem
+*.key
+*.p12
+*.pfx
+auth.json

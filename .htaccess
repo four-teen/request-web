@@ -1,0 +1,5 @@
+# This directory is source code. Local Apache only redirects to the frontend dev server.
+Options -Indexes
+DirectoryIndex index.php
+RewriteEngine On
+RewriteRule ^(?!index\.php$).+ - [F,L]

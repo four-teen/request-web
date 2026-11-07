@@ -1,0 +1,9 @@
+.env
+.env.*
+.git/
+node_modules/
+tests/
+scripts/dev.mjs
+README.md
+index.php
+.htaccess
