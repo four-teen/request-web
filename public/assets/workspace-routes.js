@@ -1,5 +1,6 @@
 // Public page URLs share one mapping in the browser, development server, and proxy.
 export const workspacePages = Object.freeze({
+  '/users': 'administrator/manage_accounts.php',
   '/dashboard': 'administrator/index.php',
   '/requests': 'administrator/manage_request.php',
   '/overdue-requests': 'administrator/overdue_requests.php',

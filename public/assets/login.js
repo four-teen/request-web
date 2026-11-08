@@ -67,7 +67,10 @@
     })().finally(() => { sessionPromise = null; });
     return sessionPromise;
   }
-  function openWorkspace() { window.location.assign('/dashboard'); }
+  function openWorkspace(path = '/dashboard') {
+    if (!/^\/(dashboard|requests|record-logs|document-types|statistics|reports)$/.test(path)) path = '/dashboard';
+    window.location.assign(path);
+  }
 
   setOpen(false, false);
   updateViewport();
@@ -87,16 +90,16 @@
       const body = new URLSearchParams({ username: username.value, password: password.value, csrf_token: csrfToken });
       const response = await fetch('/api/auth/login.php', { method: 'POST', credentials: 'same-origin', body });
       if (response.status === 419) csrfToken = '';
-      await readResponse(response);
+      const data = await readResponse(response);
       password.value = '';
-      openWorkspace();
+      openWorkspace(data.workspaceUrl);
     } catch (error) {
       showMessage(error instanceof Error ? error.message : 'Unable to sign in. Please try again.');
       setBusy(false);
       password.focus();
     }
   });
-  loadSession().then(data => { if (data.user) openWorkspace(); }).catch(error => {
+  loadSession().then(data => { if (data.user) openWorkspace(data.workspaceUrl); }).catch(error => {
     setOpen(true, false);
     showMessage(error.message);
   });
