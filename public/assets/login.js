@@ -67,7 +67,7 @@
     })().finally(() => { sessionPromise = null; });
     return sessionPromise;
   }
-  function openWorkspace() { window.location.assign('/api/administrator/'); }
+  function openWorkspace() { window.location.assign('/api/administrator/index.php'); }
 
   setOpen(false, false);
   updateViewport();

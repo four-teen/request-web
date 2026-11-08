@@ -2,6 +2,10 @@
   "framework": null,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [
+    { "source": "/api/administrator", "destination": "/api/administrator/index.php", "permanent": false },
+    { "source": "/api/administrator/", "destination": "/api/administrator/index.php", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/api", "destination": "/api/proxy?__request_path=" },
     { "source": "/api/:path*", "destination": "/api/proxy?__request_path=:path*" }

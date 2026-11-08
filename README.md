@@ -29,7 +29,17 @@ Import the GitHub repository into Vercel. Use its repository root, Node.js 22, b
 
 `/api/*` is forwarded by `api/proxy.js`. Session cookies, CSRF headers, form submissions, and redirects remain on the frontend origin. Large reports stream through the proxy instead of being buffered as one function response. Concurrent startup/sign-in calls share one session request to avoid a CSRF race on slow connections. Database credentials belong only on the PHP host. Do not expose the local backend directly to the internet for a preview deployment.
 
-After sign-in, `/api/administrator/` displays the preserved PHP administrative workspace through the same proxy. These screens are still rendered by `request-api`; extracting their interfaces into this frontend is a later phase. Vercel hosts the frontend/proxy; PHP and MySQL require their own backend hosting.
+After sign-in, `/api/administrator/index.php` displays the preserved PHP administrative workspace through the same proxy. Both `/api/administrator` and `/api/administrator/` redirect to this explicit page in development and on Vercel, preserving relative asset and navigation links. These screens are still rendered by `request-api`; extracting their interfaces into this frontend is a later phase. Vercel hosts the frontend/proxy; PHP and MySQL require their own backend hosting.
+
+### Check API health
+
+Run `npm run health` to check the local environment, or use explicit public URLs:
+
+```sh
+npm run health -- --api https://sksu-orms.net/request-api --web https://request-web-dun.vercel.app
+```
+
+The command makes read-only session and logo requests directly and through the proxy. It verifies JSON session fields, session-cookie persistence, and PNG content types, and exits with a nonzero status when a check fails. It does not print credentials, cookies, tokens, or account data. A successful HTTP status with university/home-page HTML is a failure, not a healthy API. If the public API directory is `0700`, change it to `0755`; Apache otherwise cannot read its `.htaccess`. Complete the deployed application's own `.env`, not only the private Git clone's configuration.
 
 ## Files
 

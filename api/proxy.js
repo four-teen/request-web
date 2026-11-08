@@ -11,7 +11,7 @@ const adminPages = new Set([
 
 export function permittedPath(path) {
   if (path.includes('\\') || path.split('/').some(part => part === '..' || part === '.') || /[\x00-\x20]/.test(path)) return false;
-  if (['', 'index.php', 'logout.php', 'verify.php', 'auth/session.php', 'auth/login.php', 'administrator/'].includes(path)) return true;
+  if (['', 'index.php', 'logout.php', 'verify.php', 'auth/session.php', 'auth/login.php', 'administrator', 'administrator/'].includes(path)) return true;
   if (path.startsWith('administrator/')) return adminPages.has(path.slice('administrator/'.length));
   return /^(assets|dist|profile)\/[\w./-]+\.(css|js|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot)$/i.test(path);
 }
@@ -35,6 +35,14 @@ export default async function proxy(req, res) {
     res.setHeader('Allow', 'GET, HEAD, POST');
     return res.end('Method not allowed.');
   }
+  incoming.searchParams.delete('__request_path');
+  // Use a real PHP page for the dashboard. Directory URLs behave differently
+  // between the local server and Vercel, and need a canonical URL for relative links.
+  if (path === 'administrator' || path === 'administrator/') {
+    res.statusCode = 307;
+    res.setHeader('Location', '/api/administrator/index.php' + incoming.search);
+    return res.end();
+  }
   const origin = process.env.REQUEST_API_ORIGIN;
   if (!origin) {
     res.statusCode = 503;
@@ -55,7 +63,6 @@ export default async function proxy(req, res) {
     res.statusCode = 400;
     return res.end('Invalid backend path.');
   }
-  incoming.searchParams.delete('__request_path');
   upstream.search = incoming.searchParams.toString();
   const headers = {};
   for (const name of ['accept', 'content-type', 'cookie', 'x-csrf-token']) {

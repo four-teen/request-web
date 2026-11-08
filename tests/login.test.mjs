@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
-test('a quick sign-in reuses the pending session request', async () => {
+test('a quick sign-in reuses the pending session request and opens the explicit dashboard page', async () => {
   const elements = new Map();
   function element(id) {
     if (!elements.has(id)) {
@@ -43,5 +43,5 @@ test('a quick sign-in reuses the pending session request', async () => {
   const login = calls.find(call => call.path.endsWith('login.php'));
   assert.equal(login.options.body.get('csrf_token'), 'fixture-csrf');
   assert.equal(login.options.body.get('username'), 'fixture-user');
-  assert.deepEqual(navigation, ['/api/administrator/']);
+  assert.deepEqual(navigation, ['/api/administrator/index.php']);
 });
