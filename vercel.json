@@ -7,6 +7,7 @@
     { "source": "/api/administrator/", "destination": "/dashboard", "permanent": false }
   ],
   "rewrites": [
+    { "source": "/users", "destination": "/api/proxy?__request_page=users" },
     { "source": "/dashboard", "destination": "/api/proxy?__request_page=dashboard" },
     { "source": "/requests", "destination": "/api/proxy?__request_page=requests" },
     { "source": "/overdue-requests", "destination": "/api/proxy?__request_page=overdue-requests" },

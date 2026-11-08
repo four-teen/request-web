@@ -5,10 +5,10 @@ import { once } from 'node:events';
 import proxy, { permittedPath } from '../api/proxy.js';
 
 test('only working PHP routes and static assets can pass through the proxy', () => {
-  for (const path of ['auth/session.php', 'auth/login.php', 'administrator', 'administrator/', 'administrator/index.php', 'administrator/overdue_requests.php', 'administrator/query_request.php', 'administrator/record_logs.php', 'administrator/query_record_logs.php', 'assets/vendor/bootstrap/css/bootstrap.min.css', 'profile/default.png']) {
+  for (const path of ['auth/session.php', 'auth/login.php', 'administrator', 'administrator/', 'administrator/index.php', 'administrator/overdue_requests.php', 'administrator/query_request.php', 'administrator/record_logs.php', 'administrator/query_record_logs.php', 'administrator/manage_accounts.php', 'administrator/query_accounts.php', 'assets/vendor/bootstrap/css/bootstrap.min.css', 'profile/default.png']) {
     assert.equal(permittedPath(path), true, path);
   }
-  for (const path of ['.env', 'db.php', 'config.php', 'administrator/db.php', 'administrator/header.php', 'administrator/record_log_functions.php', 'deploy/migrate-record-logs.php', 'administrator/log.txt', '../db.php', 'assets/../db.php', 'administrator/index - Copy.php', '/evil.example/auth/login.php', 'assets/secret.php']) {
+  for (const path of ['.env', 'db.php', 'config.php', 'account_access.php', 'administrator/account_functions.php', 'administrator/db.php', 'administrator/header.php', 'administrator/record_log_functions.php', 'deploy/migrate-record-logs.php', 'administrator/log.txt', '../db.php', 'assets/../db.php', 'administrator/index - Copy.php', '/evil.example/auth/login.php', 'assets/secret.php']) {
     assert.equal(permittedPath(path), false, path);
   }
 });

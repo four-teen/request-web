@@ -9,6 +9,7 @@ const adminPages = new Set([
   'print_summary.php', 'printed_summary.php', 'query_request.php', 'query_programs.php',
   'query_assigned.php', 'query_print_report.php', 'get_remarks.php', 'get_doc_request_stats.php',
   'record_logs.php', 'query_record_logs.php',
+  'manage_accounts.php', 'query_accounts.php',
 ]);
 
 export function permittedPath(path) {
