@@ -1,5 +1,7 @@
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import { workspacePages, workspaceUrl } from '../public/assets/workspace-routes.js';
+import { workspaceHtml } from '../lib/workspace-html.js';
 
 const adminPages = new Set([
   'index.php', 'manage_request.php', 'overdue_requests.php', 'document_type.php', 'released_summary.php',
@@ -20,8 +22,17 @@ export default async function proxy(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const incoming = new URL(req.url, 'http://request.local');
   let path;
+  let publicPage;
   try {
-    path = decodeURIComponent(String(req.query?.__request_path ?? incoming.searchParams.get('__request_path') ?? incoming.pathname.replace(/^\/api\/?/, '')));
+    const pageParameter = req.query?.__request_page ?? incoming.searchParams.get('__request_page');
+    publicPage = pageParameter == null ? incoming.pathname : '/' + String(pageParameter).replace(/^\//, '');
+    if (pageParameter != null && !Object.hasOwn(workspacePages, publicPage)) {
+      res.statusCode = 404;
+      return res.end('Not found.');
+    }
+    path = Object.hasOwn(workspacePages, publicPage)
+      ? workspacePages[publicPage]
+      : decodeURIComponent(String(req.query?.__request_path ?? incoming.searchParams.get('__request_path') ?? incoming.pathname.replace(/^\/api\/?/, '')));
   } catch {
     res.statusCode = 400;
     return res.end('Invalid backend path.');
@@ -36,11 +47,12 @@ export default async function proxy(req, res) {
     return res.end('Method not allowed.');
   }
   incoming.searchParams.delete('__request_path');
-  // Use a real PHP page for the dashboard. Directory URLs behave differently
-  // between the local server and Vercel, and need a canonical URL for relative links.
-  if (path === 'administrator' || path === 'administrator/') {
+  incoming.searchParams.delete('__request_page');
+  const cleanUrl = workspaceUrl(path);
+  // Preserve old bookmarks, including the directory URL that Vercel cannot serve.
+  if (cleanUrl && !Object.hasOwn(workspacePages, publicPage)) {
     res.statusCode = 307;
-    res.setHeader('Location', '/api/administrator/index.php' + incoming.search);
+    res.setHeader('Location', cleanUrl + incoming.search);
     return res.end();
   }
   const origin = process.env.REQUEST_API_ORIGIN;
@@ -108,14 +120,19 @@ export default async function proxy(req, res) {
     if (cookies.length) res.setHeader('Set-Cookie', cookies);
     const location = response.headers.get('location');
     if (location) {
-      if (/^https?:\/\//i.test(location) && location.startsWith(base.href)) {
-        res.setHeader('Location', '/api/' + location.slice(base.href.length));
-      } else if (location.startsWith(base.pathname) && base.pathname !== '/') {
-        res.setHeader('Location', '/api/' + location.slice(base.pathname.length));
+      const destination = new URL(location, upstream);
+      if (destination.origin === base.origin && destination.pathname.startsWith(base.pathname)) {
+        const backendPath = destination.pathname.slice(base.pathname.length);
+        const mapped = workspaceUrl(backendPath) || (['', 'index.php'].includes(backendPath) ? '/' : '/api/' + backendPath);
+        res.setHeader('Location', mapped + destination.search + destination.hash);
       } else res.setHeader('Location', location);
     }
     if (req.method === 'HEAD' || !response.body) return res.end();
     res.flushHeaders();
+    if (Object.hasOwn(workspacePages, publicPage) && /^text\/html(?:;|$)/i.test(response.headers.get('content-type') || '')) {
+      await pipeline(Readable.fromWeb(response.body), workspaceHtml(), res);
+      return;
+    }
     await pipeline(Readable.fromWeb(response.body), res);
   } catch {
     if (res.headersSent || res.destroyed) {

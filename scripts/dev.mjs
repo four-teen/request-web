@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import proxy from '../api/proxy.js';
+import { workspacePages } from '../public/assets/workspace-routes.js';
 
 process.env.REQUEST_API_ORIGIN ||= 'http://127.0.0.1:8016';
 const publicRoot = fileURLToPath(new URL('../public/', import.meta.url));
@@ -10,7 +11,7 @@ const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 
 const port = Number(process.env.REQUEST_WEB_PORT || 5178);
 createServer(async (req, res) => {
   const url = new URL(req.url, 'http://127.0.0.1');
-  if (url.pathname === '/api' || url.pathname.startsWith('/api/')) return proxy(req, res);
+  if (url.pathname === '/api' || url.pathname.startsWith('/api/') || Object.hasOwn(workspacePages, url.pathname)) return proxy(req, res);
   try {
     const path = resolve(publicRoot, '.' + decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname));
     if (!path.startsWith(publicRoot.endsWith(sep) ? publicRoot : publicRoot + sep)) {

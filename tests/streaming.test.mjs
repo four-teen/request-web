@@ -10,7 +10,7 @@ test('streams the first upstream chunk before the report finishes', async t => {
   const finish = new Promise(resolve => { release = resolve; });
   const backend = createServer(async (req, res) => {
     res.setHeader('Content-Type', 'text/html');
-    res.write('<p>first chunk</p>');
+    res.write('<!doctype html><head></head><body><p>first chunk</p>');
     await finish;
     res.end('x'.repeat(5 * 1024 * 1024));
   }).listen(0, '127.0.0.1');
@@ -24,10 +24,10 @@ test('streams the first upstream chunk before the report finishes', async t => {
     else process.env.REQUEST_API_ORIGIN = originalOrigin;
     await Promise.all([new Promise(resolve => frontend.close(resolve)), new Promise(resolve => backend.close(resolve))]);
   });
-  const response = await fetch(`http://127.0.0.1:${frontend.address().port}/api/administrator/printed_summary.php`, { signal: AbortSignal.timeout(5000) });
+  const response = await fetch(`http://127.0.0.1:${frontend.address().port}/reports/print`, { signal: AbortSignal.timeout(5000) });
   const reader = response.body.getReader();
   const first = await reader.read();
-  assert.equal(new TextDecoder().decode(first.value), '<p>first chunk</p>');
+  assert.match(new TextDecoder().decode(first.value), /<base href="\/api\/administrator\/">.*<p>first chunk<\/p>/);
   release();
   let size = first.value.length;
   while (true) {

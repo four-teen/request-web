@@ -3,10 +3,21 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "redirects": [
-    { "source": "/api/administrator", "destination": "/api/administrator/index.php", "permanent": false },
-    { "source": "/api/administrator/", "destination": "/api/administrator/index.php", "permanent": false }
+    { "source": "/api/administrator", "destination": "/dashboard", "permanent": false },
+    { "source": "/api/administrator/", "destination": "/dashboard", "permanent": false }
   ],
   "rewrites": [
+    { "source": "/dashboard", "destination": "/api/proxy?__request_page=dashboard" },
+    { "source": "/requests", "destination": "/api/proxy?__request_page=requests" },
+    { "source": "/overdue-requests", "destination": "/api/proxy?__request_page=overdue-requests" },
+    { "source": "/record-logs", "destination": "/api/proxy?__request_page=record-logs" },
+    { "source": "/document-types", "destination": "/api/proxy?__request_page=document-types" },
+    { "source": "/released-requests", "destination": "/api/proxy?__request_page=released-requests" },
+    { "source": "/statistics", "destination": "/api/proxy?__request_page=statistics" },
+    { "source": "/programs", "destination": "/api/proxy?__request_page=programs" },
+    { "source": "/program-incharge", "destination": "/api/proxy?__request_page=program-incharge" },
+    { "source": "/reports", "destination": "/api/proxy?__request_page=reports" },
+    { "source": "/reports/print", "destination": "/api/proxy?__request_page=reports/print" },
     { "source": "/api", "destination": "/api/proxy?__request_path=" },
     { "source": "/api/:path*", "destination": "/api/proxy?__request_path=:path*" }
   ],

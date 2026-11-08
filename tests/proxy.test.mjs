@@ -13,7 +13,7 @@ test('only working PHP routes and static assets can pass through the proxy', () 
   }
 });
 
-test('dashboard aliases redirect to the explicit page and preserve queries and sessions', async t => {
+test('old dashboard URLs redirect to the public page and preserve queries and sessions', async t => {
   const originalOrigin = process.env.REQUEST_API_ORIGIN;
   let seen;
   const backend = createServer((req, res) => {
@@ -34,12 +34,13 @@ test('dashboard aliases redirect to the explicit page and preserve queries and s
   for (const path of [
     '/api/administrator?tab=pending',
     '/api/administrator/?tab=pending',
+    '/api/administrator/index.php?tab=pending',
     '/api/proxy?__request_path=administrator&tab=pending',
     '/api/proxy?__request_path=administrator%2F&tab=pending',
   ]) {
     const alias = await fetch(origin + path, { redirect: 'manual' });
     assert.equal(alias.status, 307, path);
-    assert.equal(alias.headers.get('location'), '/api/administrator/index.php?tab=pending');
+    assert.equal(alias.headers.get('location'), '/dashboard?tab=pending');
     const dashboard = await fetch(origin + alias.headers.get('location'), { headers: { Cookie: 'PHPSESSID=fixture-session' } });
     assert.equal(dashboard.status, 200);
     assert.equal(await dashboard.text(), '<h1>Dashboard</h1>');
@@ -57,7 +58,7 @@ test('forwards sessions, form data, queries and redirects without following them
     for await (const chunk of req) chunks.push(chunk);
     seen = { url: req.url, cookie: req.headers.cookie, csrf: req.headers['x-csrf-token'], body: Buffer.concat(chunks).toString() };
     res.statusCode = 302;
-    res.setHeader('Location', 'administrator/');
+    res.setHeader('Location', '../administrator/');
     res.setHeader('Set-Cookie', ['PHPSESSID=replaced; Domain=backend.example; Path=/backend; HttpOnly; Secure']);
     res.end('redirect');
   }).listen(0, '127.0.0.1');
@@ -84,7 +85,7 @@ test('forwards sessions, form data, queries and redirects without following them
     redirect: 'manual',
   });
   assert.equal(response.status, 302);
-  assert.equal(response.headers.get('location'), 'administrator/');
+  assert.equal(response.headers.get('location'), '/dashboard');
   assert.match(response.headers.get('set-cookie'), /PHPSESSID=replaced/);
   assert.match(response.headers.get('set-cookie'), /Path=\//);
   assert.match(response.headers.get('set-cookie'), /HttpOnly; Secure/);

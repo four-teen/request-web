@@ -49,7 +49,7 @@ async function checkSession(label, url) {
       return;
     }
     const data = await response.json();
-    if (typeof data.csrfToken !== 'string' || !data.csrfToken || !Object.hasOwn(data, 'user') || data.workspaceUrl !== '/api/administrator/') {
+    if (typeof data.csrfToken !== 'string' || !data.csrfToken || !Object.hasOwn(data, 'user') || !['/dashboard', '/api/administrator/'].includes(data.workspaceUrl)) {
       report(label, false, 'JSON does not contain a usable reQuest session. Check PHP sessions and the configured API path.');
       return;
     }
@@ -67,23 +67,62 @@ async function checkSession(label, url) {
   }
 }
 
-async function checkAsset(label, url) {
+async function checkAsset(label, url, expectedType, signature) {
   try {
     const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(15000) });
     const type = response.headers.get('content-type') || '';
-    const ok = response.status === 200 && /^image\/png(?:;|$)/i.test(type);
+    const bytes = Buffer.from(await response.arrayBuffer());
+    const ok = response.status === 200 && expectedType.test(type) && bytes.length > 0
+      && (!signature || bytes.subarray(0, signature.length).equals(signature));
+    report(label, ok, ok ? 'runtime asset is reachable' : `HTTP ${response.status}, ${type || 'no content type'}; expected the actual runtime asset. Check tracked files, deployment, and parent rewrite rules.`);
+  } catch (error) {
+    report(label, false, failureLabel(error));
+  }
+}
+
+async function checkRoute(label, path, expectedStatus, expectedLocation) {
+  try {
+    const response = await fetch(new URL(path, settings.web), { redirect: 'manual', signal: AbortSignal.timeout(15000) });
+    const ok = response.status === expectedStatus && response.headers.get('location') === expectedLocation;
     await response.body?.cancel();
-    report(label, ok, ok ? 'public API assets are reachable' : `HTTP ${response.status}, ${type || 'no content type'}; expected a PNG. Check deployment, directory permissions, and parent rewrite rules.`);
+    report(label, ok, ok ? 'public page routing works' : `HTTP ${response.status}; expected ${expectedStatus} redirect to ${expectedLocation}. Deploy the frontend routes and proxy together.`);
   } catch (error) {
     report(label, false, failureLabel(error));
   }
 }
 
 if (!process.exitCode) {
-  await Promise.all([
-    checkSession('Direct API session', new URL('auth/session.php', settings.api)),
-    checkSession('Frontend proxy session', new URL('api/auth/session.php', settings.web)),
-    checkAsset('Direct API asset', new URL('assets/img/request-logo.png', settings.api)),
-    checkAsset('Frontend proxy asset', new URL('api/assets/img/request-logo.png', settings.web)),
-  ]);
+  const css = /^text\/css(?:;|$)/i;
+  const js = /^(?:application|text)\/(?:javascript|x-javascript)(?:;|$)/i;
+  const assets = [
+    ['assets/img/request-logo.png', /^image\/png(?:;|$)/i, Buffer.from('89504e470d0a1a0a', 'hex')],
+    ['assets/vendor/bootstrap/css/bootstrap.min.css', css],
+    ['assets/vendor/bootstrap/js/bootstrap.bundle.min.js', js],
+    ['assets/vendor/bootstrap-icons/bootstrap-icons.css', css],
+    ['assets/vendor/bootstrap-icons/fonts/bootstrap-icons.woff2', /./, Buffer.from('wOF2')],
+    ['assets/vendor/boxicons/css/boxicons.min.css', css],
+    ['assets/vendor/boxicons/fonts/boxicons.woff2', /./, Buffer.from('wOF2')],
+    ['assets/vendor/quill/quill.snow.css', css],
+    ['assets/vendor/quill/quill.bubble.css', css],
+    ['assets/vendor/remixicon/remixicon.css', css],
+    ['assets/vendor/simple-datatables/style.css', css],
+    ['assets/vendor/apexcharts/apexcharts.css', css],
+    ['assets/vendor/apexcharts/apexcharts.min.js', js],
+    ['assets/css/style.css', css],
+    ['assets/css/admin-theme.css', css],
+    ['assets/js/main.js', js],
+  ];
+  const checks = [
+    () => checkSession('Direct API session', new URL('auth/session.php', settings.api)),
+    () => checkSession('Frontend proxy session', new URL('api/auth/session.php', settings.web)),
+    () => checkRoute('Dashboard', 'dashboard', 302, '/api/logout.php'),
+    () => checkRoute('Old dashboard bookmark', 'api/administrator/', 307, '/dashboard'),
+    ...assets.flatMap(([path, type, signature]) => [
+      () => checkAsset(`Direct ${path}`, new URL(path, settings.api), type, signature),
+      () => checkAsset(`Proxy ${path}`, new URL('api/' + path, settings.web), type, signature),
+    ]),
+  ];
+  for (let index = 0; index < checks.length; index += 4) {
+    await Promise.all(checks.slice(index, index + 4).map(check => check()));
+  }
 }
